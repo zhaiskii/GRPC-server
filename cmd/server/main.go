@@ -16,6 +16,7 @@ func main(){
 	if err!=nil {
 		//smth smth
 	}
+	
 	orderRepo := repo.NewOrderRepo()
 	orderService := service.NewOrderServiceServer(orderRepo)
 
