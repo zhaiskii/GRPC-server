@@ -61,3 +61,4 @@ func (s *OrderServiceServer) ListOrders(ctx context.Context, req *pb.ListOrdersR
 	}
 	return &pb.ListOrdersResponse{Orders: dodik}, nil
 }
+
