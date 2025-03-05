@@ -11,6 +11,7 @@ import(
 	"syscall"
 	"time"
 	"google.golang.org/grpc"
+	"yalyceum_hw_grpc/internal/interceptor"
 	"context"
 	pb "yalyceum_hw_grpc/pkg/api/test/api" 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -29,7 +30,8 @@ func main(){
 	err_nafig := cleanenv.ReadConfig("./config.yaml", &cfg)
 	_ = err_nafig
 	//fmt.Println(cfg.Port_grpc)
-	lis, err := net.Listen("tcp", "localhost:50051")
+	//
+	lis, err := net.Listen("tcp", cfg.Host+":"+cfg.Port_grpc)
 	//also smth with this error
 	if err!=nil {
 		//smth smth
@@ -38,7 +40,7 @@ func main(){
 	orderRepo := repo.NewOrderRepo()
 	orderService := service.NewOrderServiceServer(orderRepo)
 
-	server := grpc.NewServer()
+	server := grpc.NewServer(grpc.UnaryInterceptor(interceptor.UnaryLoggingInterceptor))
 	pb.RegisterOrderServiceServer(server, orderService)
 
 	reflection.Register(server	)
@@ -51,13 +53,13 @@ func main(){
 	}()
 	mux:=runtime.NewServeMux()
 	httpServer := &http.Server{
-		Addr: ":8082",
+		Addr: ":"+cfg.Port_http,
 		Handler: mux,
 	}
 	go func() {
 		
 		opts := []grpc.DialOption{grpc.WithInsecure()}
-		err = pb.RegisterOrderServiceHandlerFromEndpoint(context.Background(), mux, "localhost:50051", opts)
+		err = pb.RegisterOrderServiceHandlerFromEndpoint(context.Background(), mux, cfg.Host+":"+cfg.Port_grpc, opts)
 		if err!=nil{
 			fmt.Errorf("main.go registering http server %s", err)
 		}
